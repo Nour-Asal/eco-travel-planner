@@ -4,6 +4,7 @@ const MAX_HISTORY_MESSAGES = 80;
 const MAX_CONTEXT_MESSAGES = 12;
 const MAX_SESSIONS = 18;
 const SHARE_HASH_PREFIX = "#share=";
+const APP_VERSION = "1.0.0";
 
 const form = document.querySelector("#plannerForm");
 const messageInput = document.querySelector("#messageInput");
@@ -51,6 +52,7 @@ const closeRenameButton = document.querySelector("#closeRenameButton");
 const cancelRenameButton = document.querySelector("#cancelRenameButton");
 const styleButtons = Array.from(document.querySelectorAll("#styleControl button"));
 const stepperButtons = Array.from(document.querySelectorAll("[data-stepper-target]"));
+const appVersionLabel = document.querySelector("#appVersionLabel");
 
 const sidebarStateKey = "eco-travel-planner-sidebar-collapsed";
 const historyKey = "eco-travel-planner-history";
@@ -80,6 +82,8 @@ const DEFAULT_TRIP_SETTINGS = {
 const I18N = {
   English: {
     topActions: "Display and sharing controls",
+    appInformation: "App information",
+    sidebarCredit: "Designed & Built by Nour Asal",
     changeLanguage: "Change language",
     chooseLanguage: "Choose language",
     selectedLanguage: "{language} selected",
@@ -245,6 +249,8 @@ const I18N = {
   },
   Turkish: {
     topActions: "Görünüm ve paylaşım kontrolleri",
+    appInformation: "Uygulama bilgisi",
+    sidebarCredit: "Tasarlandı ve geliştirildi: Nour Asal",
     changeLanguage: "Dili değiştir",
     chooseLanguage: "Dil seç",
     selectedLanguage: "{language} seçildi",
@@ -410,6 +416,8 @@ const I18N = {
   },
   Arabic: {
     topActions: "عناصر العرض والمشاركة",
+    appInformation: "معلومات التطبيق",
+    sidebarCredit: "تم التصميم والتطوير بواسطة Nour Asal",
     changeLanguage: "تغيير اللغة",
     chooseLanguage: "اختر اللغة",
     selectedLanguage: "تم اختيار {language}",
@@ -2798,6 +2806,10 @@ function translateStaticUI() {
 
   if (pendingAttachments.length && messageInput && !messageInput.value.trim()) {
     messageInput.placeholder = t("addTravelFile");
+  }
+
+  if (appVersionLabel) {
+    appVersionLabel.textContent = `Eco Travel Planner v${APP_VERSION}`;
   }
 
   setStatus(statusChip?.classList.contains("loading") ? t("thinking") : t("ready"), Boolean(statusChip?.classList.contains("loading")));

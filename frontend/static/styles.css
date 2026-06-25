@@ -1754,7 +1754,6 @@ body.sidebar-collapsed .chat-messages {
   padding-bottom: 14px;
 }
 
-.sidebar-footer,
 .settings-card.slim,
 .context-row {
   display: none !important;
@@ -3541,6 +3540,59 @@ html[dir="rtl"] .floating-sidebar-toggle,
     height: 30px;
     opacity: 1;
     width: 30px;
+  }
+}
+
+
+/* Sidebar footer branding */
+.sidebar-footer {
+  background: color-mix(in srgb, var(--panel) 72%, transparent);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  color: var(--muted);
+  display: grid;
+  flex: 0 0 auto;
+  gap: 4px;
+  line-height: 1.35;
+  margin-top: auto;
+  padding: 11px 12px;
+}
+
+.sidebar-footer::before {
+  background: linear-gradient(90deg, transparent, var(--accent-line), transparent);
+  content: "";
+  display: block;
+  height: 1px;
+  margin-bottom: 5px;
+  opacity: 0.8;
+}
+
+.sidebar-footer p {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sidebar-footer p:first-of-type {
+  color: var(--muted-strong);
+  font-size: 0.73rem;
+  font-weight: 720;
+}
+
+.sidebar-footer p:last-of-type {
+  color: var(--muted);
+  font-size: 0.69rem;
+  font-weight: 760;
+}
+
+:root[dir="rtl"] .sidebar-footer,
+html[data-language="arabic"] .sidebar-footer {
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .sidebar-footer {
+    margin-top: 18px;
   }
 }
 
