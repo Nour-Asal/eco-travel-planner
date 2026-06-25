@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0f766e" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="description"
+      content="Eco Travel Planner helps build sustainable routes, stays, weather-aware plans, budgets, and local travel context."
+    />
+    <title>Eco Travel Planner</title>
+    <script>
+      (() => {
+        try {
+          const key = "eco-travel-planner-theme";
+          const saved = localStorage.getItem(key);
+          const systemTheme = window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          const theme = saved === "light" || saved === "dark" ? saved : systemTheme;
+          document.documentElement.dataset.theme = theme;
+          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "light" ? "#f8fafc" : "#0b0f14");
+        } catch {
+          document.documentElement.dataset.theme = "dark";
+          document.querySelector('meta[name="theme-color"]')?.setAttribute("content", "#0b0f14");
+        }
+      })();
+    </script>
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="icon" href="./static/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./static/icons/icon-192.svg" />
+    <link rel="stylesheet" href="./static/styles.css?v=8" />
+  </head>
+  <body>
+    <button class="floating-sidebar-toggle icon-button sidebar-toggle-button" id="openSidebarButton" type="button" aria-label="Open sidebar" title="Open sidebar" data-i18n-aria-label="openSidebar" data-i18n-title="openSidebar">
+      <svg class="ui-icon sidebar-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+        <path d="M9 3v18" />
+        <path d="m13 9 3 3-3 3" />
+      </svg>
+    </button>
+    <div class="top-actions" aria-label="Display and sharing controls" data-i18n-aria-label="topActions">
+      <div class="language-picker" id="languagePicker">
+        <button class="language-toggle-button icon-button" id="languageToggleButton" type="button" aria-label="Change language" title="Change language" aria-haspopup="menu" aria-expanded="false" data-i18n-aria-label="changeLanguage" data-i18n-title="changeLanguage">
+          <svg class="ui-icon language-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M2 12h20" />
+            <path d="M12 2a15.3 15.3 0 0 1 0 20" />
+            <path d="M12 2a15.3 15.3 0 0 0 0 20" />
+          </svg>
+          <span class="language-code" id="languageCode" aria-hidden="true">EN</span>
+        </button>
+        <div class="language-menu" id="languageMenu" role="menu" aria-label="Choose language" hidden data-i18n-aria-label="chooseLanguage"></div>
+      </div>
+      <button class="theme-toggle-button icon-button" id="themeToggleButton" type="button" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="ui-icon theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20.4 14.6A8.5 8.5 0 0 1 9.4 3.6 8.5 8.5 0 1 0 20.4 14.6Z" />
+        </svg>
+        <svg class="ui-icon theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2" />
+          <path d="M12 20v2" />
+          <path d="m4.93 4.93 1.41 1.41" />
+          <path d="m17.66 17.66 1.41 1.41" />
+          <path d="M2 12h2" />
+          <path d="M20 12h2" />
+          <path d="m6.34 17.66-1.41 1.41" />
+          <path d="m19.07 4.93-1.41 1.41" />
+        </svg>
+      </button>
+      <button class="share-button" id="shareButton" type="button" aria-label="Share conversation" aria-haspopup="dialog" data-i18n-aria-label="shareConversation">
+        <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 4v12" />
+          <path d="m7 9 5-5 5 5" />
+          <path d="M5 15v2.5A2.5 2.5 0 0 0 7.5 20h9a2.5 2.5 0 0 0 2.5-2.5V15" />
+        </svg>
+        <span data-i18n="share">Share</span>
+      </button>
+    </div>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Trip settings" data-i18n-aria-label="tripSettings">
+        <header class="sidebar-brand">
+          <a class="brand" href="/" aria-label="Eco Travel Planner home">
+            <span class="brand-mark">
+              <img class="brand-logo" src="./static/favicon.svg" alt="" />
+            </span>
+            <span>
+              <strong>Eco Travel Planner</strong>
+            </span>
+          </a>
+          <button class="icon-button mobile-close sidebar-toggle-button" id="closeSidebarButton" type="button" aria-label="Close sidebar" title="Close sidebar" data-i18n-aria-label="closeSidebar" data-i18n-title="closeSidebar">
+            <svg class="ui-icon sidebar-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+              <path d="M9 3v18" />
+              <path d="m16 9-3 3 3 3" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="sidebar-actions">
+          <button class="new-chat-button" id="newChatButton" type="button" title="New trip" data-i18n-title="newTrip">
+            <span class="sidebar-action-icon" aria-hidden="true">+</span>
+            <span class="sidebar-action-label" data-i18n="newTrip">New trip</span>
+          </button>
+          <button class="clear-chat-button" id="clearHistoryButton" type="button" title="Clear current chat" data-i18n-title="clearCurrentChat">
+            <span class="sidebar-action-icon" aria-hidden="true">x</span>
+            <span class="sidebar-action-label" data-i18n="clearChat">Clear chat</span>
+          </button>
+        </div>
+
+        <section class="recents-card" aria-label="Recent chats" data-i18n-aria-label="recentChats">
+          <button class="recents-toggle" id="recentsToggleButton" type="button" aria-expanded="false" title="Recents" data-i18n-title="recents">
+            <span class="recents-icon" aria-hidden="true"></span>
+            <span data-i18n="recents">Recents</span>
+            <strong id="recentsCount">0</strong>
+          </button>
+          <div class="recents-list" id="recentsList" hidden></div>
+        </section>
+
+        <section class="settings-card">
+          <div class="settings-card-header">
+            <div class="section-label" data-i18n="tripSettings">Trip settings</div>
+            <button class="reset-settings-button" id="resetSettingsButton" type="button" data-i18n="resetSettings" data-i18n-title="resetSettings" title="Reset settings">Reset</button>
+          </div>
+
+          <div class="field-grid compact single-field">
+            <label class="field-block">
+              <span data-i18n="budget">Budget</span>
+              <select id="budgetInput" name="budget_level">
+                <option value="Economy" data-i18n="budgetEconomy">Economy</option>
+                <option value="Smart value" selected data-i18n="budgetSmartValue">Smart value</option>
+                <option value="Premium" data-i18n="budgetPremium">Premium</option>
+                <option value="Luxury" data-i18n="budgetLuxury">Luxury</option>
+              </select>
+            </label>
+          </div>
+
+          <fieldset class="segmented-field">
+            <legend data-i18n="travelStyle">Travel style</legend>
+            <div class="segmented-control" id="styleControl">
+              <button type="button" data-value="Balanced" class="active" data-i18n="styleBalanced">Balanced</button>
+              <button type="button" data-value="Relaxed" data-i18n="styleRelaxed">Relaxed</button>
+              <button type="button" data-value="Adventure" data-i18n="styleAdventure">Adventure</button>
+              <button type="button" data-value="Family" data-i18n="styleFamily">Family</button>
+              <button type="button" data-value="Business" data-i18n="styleBusiness">Business</button>
+            </div>
+          </fieldset>
+
+          <div class="field-grid compact">
+            <label class="field-block">
+              <span data-i18n="days">Days</span>
+              <div class="stepper-control">
+                <button type="button" data-stepper-target="daysInput" data-step="-1" aria-label="Decrease days" data-i18n-aria-label="decreaseDays">-</button>
+                <input id="daysInput" name="days" type="number" min="1" max="30" value="5" />
+                <button type="button" data-stepper-target="daysInput" data-step="1" aria-label="Increase days" data-i18n-aria-label="increaseDays">+</button>
+              </div>
+            </label>
+            <label class="field-block">
+              <span data-i18n="travelers">Travelers</span>
+              <div class="stepper-control">
+                <button type="button" data-stepper-target="travelersInput" data-step="-1" aria-label="Decrease travelers" data-i18n-aria-label="decreaseTravelers">-</button>
+                <input id="travelersInput" name="travelers" type="number" min="1" max="20" value="2" />
+                <button type="button" data-stepper-target="travelersInput" data-step="1" aria-label="Increase travelers" data-i18n-aria-label="increaseTravelers">+</button>
+              </div>
+            </label>
+          </div>
+
+          <label class="range-field">
+            <span>
+              <span data-i18n="sustainability">Sustainability</span>
+              <strong id="sustainabilityValue">4</strong>
+            </span>
+            <input id="sustainabilityInput" name="sustainability_priority" type="range" min="1" max="5" value="4" />
+            <small class="range-hints">
+              <span data-i18n="lowerImpact">Lower</span>
+              <span data-i18n="higherImpact">Higher</span>
+            </small>
+          </label>
+        </section>
+
+      </aside>
+
+      <main class="chat-shell">
+        <section class="chat-messages" id="chatMessages" aria-live="polite"></section>
+
+        <form id="plannerForm" class="composer" autocomplete="off">
+          <div class="composer-shell">
+            <div class="attachment-tray" id="attachmentTray" hidden></div>
+            <button class="composer-icon-button add-context-button" id="addContextButton" type="button" aria-label="Add photos and files" aria-expanded="false" title="Add photos & files" data-i18n-aria-label="addFiles" data-i18n-title="addFiles">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+            </button>
+            <label class="sr-only" for="messageInput" data-i18n="message">Message</label>
+            <textarea
+              id="messageInput"
+              name="message"
+              rows="1"
+              placeholder="Ask anything..."
+              data-i18n-placeholder="askAnything"
+            ></textarea>
+            <button class="composer-icon-button voice-button" id="voiceButton" type="button" aria-label="Start voice input" data-i18n-aria-label="startVoiceInput">
+              <svg class="ui-icon mic-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+                <path d="M19 11a7 7 0 0 1-14 0" />
+                <path d="M12 18v4" />
+                <path d="M8 22h8" />
+              </svg>
+            </button>
+            <button class="send-button" id="submitButton" type="submit" aria-label="Send message" data-i18n-aria-label="sendMessage">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 19V5" />
+                <path d="m5 12 7-7 7 7" />
+              </svg>
+            </button>
+          </div>
+          <div class="add-files-menu" id="addFilesMenu" hidden>
+            <button class="add-files-option" id="chooseFilesButton" type="button">
+              <svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m21.4 11.6-8.5 8.5a5 5 0 0 1-7.1-7.1l9.2-9.2a3.4 3.4 0 1 1 4.8 4.8l-9.2 9.2a1.8 1.8 0 0 1-2.5-2.5l8.5-8.5" />
+              </svg>
+              <span data-i18n="addFiles">Add photos & files</span>
+            </button>
+          </div>
+          <input id="fileInput" type="file" accept="image/*,.txt,.md,.csv" multiple hidden />
+          <p class="sr-only" id="voiceStatus" aria-live="polite"></p>
+        </form>
+      </main>
+    </div>
+
+    <div class="share-overlay" id="shareOverlay" hidden>
+      <section class="share-dialog" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+        <header>
+          <div>
+            <p data-i18n="shareChat">Share chat</p>
+            <h2 id="shareTitle" data-i18n="createConversationLink">Create a conversation link</h2>
+          </div>
+          <button class="icon-button" id="closeShareButton" type="button" aria-label="Close share dialog" data-i18n-aria-label="closeShareDialog">
+            <span class="close-glyph" aria-hidden="true"></span>
+          </button>
+        </header>
+        <p class="share-note" data-i18n="shareNote">
+          This creates a local snapshot link for the current conversation. Anyone opening the same app URL can view that snapshot.
+        </p>
+        <label class="share-field">
+          <span data-i18n="conversationLink">Conversation link</span>
+          <input id="shareLinkInput" type="text" readonly />
+        </label>
+        <button class="copy-link-button" id="copyShareButton" type="button" data-i18n="copyLink">Copy link</button>
+      </section>
+    </div>
+
+    <div class="rename-overlay" id="renameOverlay" hidden>
+      <section class="rename-dialog" role="dialog" aria-modal="true" aria-labelledby="renameTitle">
+        <header>
+          <div>
+            <p data-i18n="rename">Rename</p>
+            <h2 id="renameTitle" data-i18n="renameChat">Rename chat</h2>
+          </div>
+          <button class="icon-button" id="closeRenameButton" type="button" aria-label="Close rename dialog" data-i18n-aria-label="closeRenameDialog">
+            <span class="close-glyph" aria-hidden="true"></span>
+          </button>
+        </header>
+        <form id="renameForm" autocomplete="off">
+          <label class="share-field">
+            <span data-i18n="chatName">Chat name</span>
+            <input id="renameInput" type="text" maxlength="80" required />
+          </label>
+          <div class="dialog-actions">
+            <button class="secondary-dialog-button" id="cancelRenameButton" type="button" data-i18n="cancel">Cancel</button>
+            <button class="copy-link-button" type="submit" data-i18n="save">Save</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <script src="./static/app.js?v=8" type="module"></script>
+  </body>
+</html>

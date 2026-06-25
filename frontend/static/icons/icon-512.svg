@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Eco Travel Planner icon placeholder">
+  <defs>
+    <linearGradient id="bg" x1="82" y1="48" x2="432" y2="466" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2dd4bf"/>
+      <stop offset="1" stop-color="#0b0f14"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="188" fill="#0b0f14" opacity=".22"/>
+  <path d="M138 316c58-101 154-144 272-139-25 99-105 176-215 176-24 0-43-13-57-37Z" fill="#ecfeff"/>
+  <path d="M146 312c75-24 145-58 237-136" fill="none" stroke="#0f172a" stroke-width="32" stroke-linecap="round"/>
+  <path d="M120 144h144M120 203h102" fill="none" stroke="#ecfeff" stroke-width="38" stroke-linecap="round"/>
+</svg>
