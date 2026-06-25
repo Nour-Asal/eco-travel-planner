@@ -3097,6 +3097,12 @@ document.addEventListener("click", (event) => {
   closeLanguageMenu();
 });
 
+document.addEventListener("click", (event) => {
+  if (!isMobileLayout() || !document.body.classList.contains("sidebar-open")) return;
+  if (event.target.closest(".sidebar") || event.target.closest("#openSidebarButton")) return;
+  closeSidebar();
+});
+
 window.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
 
@@ -3105,6 +3111,7 @@ window.addEventListener("keydown", (event) => {
   if (recentMenu?.hidden === false) closeRecentMenu();
   if (addFilesMenu?.hidden === false) toggleAddFilesMenu(false);
   if (languageMenu?.hidden === false) closeLanguageMenu();
+  if (document.body.classList.contains("sidebar-open")) closeSidebar();
 });
 
 window.addEventListener("scroll", () => {
