@@ -141,11 +141,17 @@ const I18N = {
     createConversationLink: "Create a conversation link",
     closeShareDialog: "Close share dialog",
     shareNote:
-      "This creates a local snapshot link for the current conversation. Anyone opening the same app URL can view that snapshot.",
+      "This creates a short share link for the current conversation. Anyone with the link can view that snapshot.",
     conversationLink: "Conversation link",
     copyLink: "Copy link",
     copy: "Copy",
     copied: "Copied",
+    creatingShareLink: "Creating share link...",
+    shareLinkCopied: "Share link copied",
+    sharedSuccessfully: "Shared successfully",
+    couldNotCopyShareLink: "Could not copy share link",
+    shareCreateFailed: "Could not create a share link. Please try again.",
+    shareNoContent: "Start a trip conversation before sharing.",
     saveAsPdf: "Save as PDF",
     print: "Print",
     shareNotSupportedCopied: "Share not supported, copied instead.",
@@ -308,11 +314,17 @@ const I18N = {
     createConversationLink: "Konuşma bağlantısı oluştur",
     closeShareDialog: "Paylaşım penceresini kapat",
     shareNote:
-      "Bu, geçerli konuşma için yerel bir anlık bağlantı oluşturur. Aynı uygulama URL'sini açan herkes bu anlık görüntüyü görebilir.",
+      "Bu, geçerli konuşma için kısa bir paylaşım bağlantısı oluşturur. Bağlantıya sahip olan herkes bu anlık görüntüyü görebilir.",
     conversationLink: "Konuşma bağlantısı",
     copyLink: "Bağlantıyı kopyala",
     copy: "Kopyala",
     copied: "Kopyalandı",
+    creatingShareLink: "Paylaşım bağlantısı oluşturuluyor...",
+    shareLinkCopied: "Paylaşım bağlantısı kopyalandı",
+    sharedSuccessfully: "Başarıyla paylaşıldı",
+    couldNotCopyShareLink: "Paylaşım bağlantısı kopyalanamadı",
+    shareCreateFailed: "Paylaşım bağlantısı oluşturulamadı. Lütfen tekrar deneyin.",
+    shareNoContent: "Paylaşmadan önce bir gezi sohbeti başlat.",
     saveAsPdf: "PDF olarak kaydet",
     print: "Yazdır",
     shareNotSupportedCopied: "Paylaşım desteklenmiyor, bunun yerine kopyalandı.",
@@ -475,11 +487,17 @@ const I18N = {
     createConversationLink: "إنشاء رابط للمحادثة",
     closeShareDialog: "إغلاق نافذة المشاركة",
     shareNote:
-      "ينشئ هذا رابط لقطة محلية للمحادثة الحالية. يمكن لأي شخص يفتح نفس رابط التطبيق رؤية هذه اللقطة.",
+      "ينشئ هذا رابط مشاركة قصيرا للمحادثة الحالية. يمكن لأي شخص لديه الرابط رؤية هذه اللقطة.",
     conversationLink: "رابط المحادثة",
     copyLink: "نسخ الرابط",
     copy: "نسخ",
     copied: "تم النسخ",
+    creatingShareLink: "جار إنشاء رابط المشاركة...",
+    shareLinkCopied: "تم نسخ رابط المشاركة",
+    sharedSuccessfully: "تمت المشاركة بنجاح",
+    couldNotCopyShareLink: "تعذر نسخ رابط المشاركة",
+    shareCreateFailed: "تعذر إنشاء رابط المشاركة. يرجى المحاولة مرة أخرى.",
+    shareNoContent: "ابدأ محادثة رحلة قبل المشاركة.",
     saveAsPdf: "حفظ كملف PDF",
     print: "طباعة",
     shareNotSupportedCopied: "المشاركة غير مدعومة، تم النسخ بدلا من ذلك.",
@@ -1545,52 +1563,343 @@ function isShareCancellation(error) {
 
 async function shareTripPlan(content, row, button) {
   const language = tripPlanRowLanguage(row);
-  const text = cleanPlanText(content);
   const title = t("travelPlan", {}, language);
+  const fallbackText = cleanPlanText(content);
+  let shareLink = "";
 
-  if (navigator.share) {
+  try {
+    const data = await createShortShareLink({
+      title,
+      history: history.length ? history : [{ role: "assistant", content: fallbackText }],
+      settings: selectedPlanSettings({
+        settings: row?.dataset.planSettings ? JSON.parse(row.dataset.planSettings) : undefined,
+      }),
+    });
+    shareLink = data.url;
+  } catch (error) {
+    console.warn("Could not create short share link for trip plan.", error);
+    shareLink = window.location.href.split("#")[0];
+  }
+
+  if (navigator.share && shareLink) {
     try {
-      await navigator.share({ title, text });
+      await navigator.share({ title, text: shareLink, url: shareLink });
+      setTemporaryActionLabel(button, t("sharedSuccessfully", {}, language), t("share", {}, language));
+      showTripPlanStatus(row, t("sharedSuccessfully", {}, language));
       return;
     } catch (error) {
       if (isShareCancellation(error)) return;
-      console.warn("Native sharing failed, falling back to copy.", error);
+      console.warn("Native sharing failed, falling back to clipboard.", error);
     }
   }
 
   try {
-    await writeClipboardText(text);
-    setTemporaryActionLabel(button, t("copied", {}, language), t("share", {}, language));
-    showTripPlanStatus(row, t("shareNotSupportedCopied", {}, language));
+    await writeClipboardText(shareLink || fallbackText);
+    setTemporaryActionLabel(button, t("shareLinkCopied", {}, language), t("share", {}, language));
+    showTripPlanStatus(row, t("shareLinkCopied", {}, language));
   } catch (error) {
-    console.warn("Could not copy trip plan during share fallback.", error);
-    showTripPlanStatus(row, t("couldNotCopy", {}, language), true);
+    console.warn("Could not copy share link.", error);
+    showTripPlanStatus(row, t("couldNotCopyShareLink", {}, language), true);
   }
 }
 
+
 let printCleanupTimer = null;
+let activePrintReport = null;
 
 function clearTripPrintTarget() {
-  document.body.classList.remove("printing-trip-plan");
+  document.body.classList.remove("printing-trip-plan", "printing-trip-report");
   document.querySelectorAll(".message-row.print-target").forEach((row) => {
     row.classList.remove("print-target");
   });
+  activePrintReport?.remove();
+  activePrintReport = null;
   window.clearTimeout(printCleanupTimer);
   printCleanupTimer = null;
 }
 
-function exportTripPlanPdf(row) {
+function stripExportFiller(value) {
+  return stripSectionMarkers(value)
+    .split(/\r?\n/)
+    .filter((line) => {
+      const clean = line.trim().toLowerCase();
+      if (!clean) return true;
+      return !(
+        clean.includes("feel free to ask") ||
+        clean.includes("let me know") ||
+        clean.includes("if you want") ||
+        clean.includes("happy to refine") ||
+        clean.includes("başka bir") ||
+        clean.includes("istersen") ||
+        clean.includes("إذا أردت") ||
+        clean.includes("يمكنني")
+      );
+    })
+    .join("\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function printElement(tag, className = "", text = "") {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text) element.textContent = text;
+  return element;
+}
+
+function printInline(value) {
+  return escapeHtml(value)
+    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.*?)\*/g, "<em>$1</em>");
+}
+
+function isMarkdownTableStart(lines, index) {
+  const current = lines[index]?.trim() || "";
+  const next = lines[index + 1]?.trim() || "";
+  return current.includes("|") && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(next);
+}
+
+function tableCells(line) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function appendPrintTable(parent, tableLines) {
+  const table = printElement("table", "print-table");
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+  const headers = tableCells(tableLines[0]);
+
+  const headRow = document.createElement("tr");
+  headers.forEach((header) => {
+    const th = document.createElement("th");
+    th.innerHTML = printInline(header);
+    headRow.appendChild(th);
+  });
+  thead.appendChild(headRow);
+
+  tableLines.slice(2).forEach((line) => {
+    if (!line.trim() || !line.includes("|")) return;
+    const row = document.createElement("tr");
+    tableCells(line).forEach((cell) => {
+      const td = document.createElement("td");
+      td.innerHTML = printInline(cell);
+      row.appendChild(td);
+    });
+    tbody.appendChild(row);
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  parent.appendChild(table);
+}
+
+function appendPrintMarkdown(parent, markdown) {
+  const lines = stripExportFiller(markdown).split(/\r?\n/);
+  let list = null;
+  let orderedList = null;
+
+  const closeLists = () => {
+    list = null;
+    orderedList = null;
+  };
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const raw = lines[index];
+    const trimmed = raw.trim();
+
+    if (!trimmed) {
+      closeLists();
+      continue;
+    }
+
+    if (isMarkdownTableStart(lines, index)) {
+      closeLists();
+      const tableLines = [lines[index], lines[index + 1]];
+      index += 2;
+      while (index < lines.length && lines[index].includes("|")) {
+        tableLines.push(lines[index]);
+        index += 1;
+      }
+      index -= 1;
+      appendPrintTable(parent, tableLines);
+      continue;
+    }
+
+    const heading = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) {
+      closeLists();
+      const level = Math.min(4, Math.max(3, heading[1].length + 1));
+      const node = printElement(`h${level}`, "print-subheading");
+      node.innerHTML = printInline(cleanHeadingText(heading[2]));
+      parent.appendChild(node);
+      continue;
+    }
+
+    if (trimmed.startsWith("- ")) {
+      orderedList = null;
+      if (!list) {
+        list = printElement("ul", "print-list");
+        parent.appendChild(list);
+      }
+      const item = document.createElement("li");
+      item.innerHTML = printInline(trimmed.slice(2));
+      list.appendChild(item);
+      continue;
+    }
+
+    const numbered = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (numbered) {
+      list = null;
+      if (!orderedList) {
+        orderedList = printElement("ol", "print-list print-list-numbered");
+        parent.appendChild(orderedList);
+      }
+      const item = document.createElement("li");
+      item.innerHTML = printInline(numbered[1]);
+      orderedList.appendChild(item);
+      continue;
+    }
+
+    closeLists();
+    const paragraph = printElement("p", "print-paragraph");
+    paragraph.innerHTML = printInline(trimmed);
+    parent.appendChild(paragraph);
+  }
+}
+
+function sectionKey(section) {
+  const text = `${section?.labelKey || ""} ${section?.title || ""}`.toLowerCase();
+  if (section?.kind === "day") return "day";
+  if (text.includes("transport") || text.includes("route") || text.includes("ulaş") || text.includes("النقل") || text.includes("المسار")) return "transport";
+  if (text.includes("stay") || text.includes("hotel") || text.includes("konak") || text.includes("الإقامة")) return "stay";
+  if (text.includes("budget") || text.includes("cost") || text.includes("bütçe") || text.includes("الميزانية")) return "budget";
+  if (text.includes("sustain") || text.includes("eco") || text.includes("sürdürü") || text.includes("الاستدامة")) return "sustainability";
+  if (text.includes("weather") || text.includes("packing") || text.includes("hava") || text.includes("الطقس")) return "weather";
+  if (text.includes("next") || text.includes("step") || text.includes("sonraki") || text.includes("الخطوات")) return "next";
+  if (section?.kind === "overview") return "overview";
+  return section?.kind || "notes";
+}
+
+function appendPrintSection(report, title, sections, className = "") {
+  const available = sections.filter((section) => hasMeaningfulLines(section.lines));
+  if (!available.length) return;
+
+  const section = printElement("section", `print-section ${className}`.trim());
+  section.appendChild(printElement("h2", "print-section-title", title));
+  available.forEach((item) => appendPrintMarkdown(section, item.lines.join("\n")));
+  report.appendChild(section);
+}
+
+function appendItinerarySection(report, daySections, language) {
+  const days = daySections.filter((section) => hasMeaningfulLines(section.lines));
+  if (!days.length) return;
+
+  const section = printElement("section", "print-section print-itinerary-section");
+  section.appendChild(printElement("h2", "print-section-title", t("sectionDailyFlow", {}, language)));
+  const grid = printElement("div", "print-day-grid");
+
+  days.forEach((day, index) => {
+    const card = printElement("article", "print-day-card");
+    const title = sectionTitle(day) || `${t("dayPlan", {}, language)} ${index + 1}`;
+    card.appendChild(printElement("h3", "print-day-title", title));
+    appendPrintMarkdown(card, day.lines.join("\n"));
+    grid.appendChild(card);
+  });
+
+  section.appendChild(grid);
+  report.appendChild(section);
+}
+
+function firstUsefulTitle() {
+  const current = findCurrentSession()?.title || titleFromHistory(history);
+  return current && current !== t("newTrip") ? current : t("travelPlan");
+}
+
+function createPrintableTripReport(content, row) {
+  const createdAt = row?.dataset.planCreatedAt || new Date().toISOString();
+  const settings = selectedPlanSettings({
+    settings: row?.dataset.planSettings ? JSON.parse(row.dataset.planSettings) : undefined,
+  });
+  const language = settings.language;
+  const meta = languageMeta(language);
+  const cleanContent = stripExportFiller(content);
+  const sections = parsePlanSections(cleanContent);
+  const report = printElement("article", "trip-print-report");
+  report.dir = meta.dir;
+  report.lang = meta.code;
+
+  const cover = printElement("header", "print-cover");
+  cover.appendChild(printElement("p", "print-kicker", "Eco Travel Planner"));
+  cover.appendChild(printElement("h1", "print-title", firstUsefulTitle()));
+  cover.appendChild(printElement("p", "print-credit", t("sidebarCredit", {}, language)));
+  cover.appendChild(printElement("p", "print-version", `Eco Travel Planner v${APP_VERSION}`));
+  cover.appendChild(printElement("p", "print-date", `${t("generatedDate", {}, language)}: ${formatGeneratedDate(createdAt, language)}`));
+  report.appendChild(cover);
+
+  const settingsSection = printElement("section", "print-section print-settings-section");
+  settingsSection.appendChild(printElement("h2", "print-section-title", t("tripSettings", {}, language)));
+  const settingsTable = printElement("table", "print-table print-settings-table");
+  const tbody = document.createElement("tbody");
+  [
+    [t("language", {}, language), meta.nativeLabel],
+    [t("budget", {}, language), translatedBudget(settings.budget, language)],
+    [t("travelStyle", {}, language), translatedTravelStyle(settings.travelStyle, language)],
+    [t("days", {}, language), String(settings.days)],
+    [t("travelers", {}, language), String(settings.travelers)],
+    [t("sustainability", {}, language), `${settings.sustainability}/5`],
+  ].forEach(([label, value]) => {
+    const tableRow = document.createElement("tr");
+    tableRow.appendChild(printElement("th", "", label));
+    tableRow.appendChild(printElement("td", "", value));
+    tbody.appendChild(tableRow);
+  });
+  settingsTable.appendChild(tbody);
+  settingsSection.appendChild(settingsTable);
+  report.appendChild(settingsSection);
+
+  const groups = sections.reduce((result, section) => {
+    const key = sectionKey(section);
+    result[key] = result[key] || [];
+    result[key].push(section);
+    return result;
+  }, {});
+
+  appendPrintSection(report, t("sectionSummary", {}, language), groups.overview || [], "print-summary-section");
+  appendPrintSection(report, t("sectionRouteTransport", {}, language), groups.transport || [], "print-transport-section");
+  appendItinerarySection(report, groups.day || [], language);
+  appendPrintSection(report, t("sectionStayStrategy", {}, language), groups.stay || [], "print-stay-section");
+  appendPrintSection(report, t("sectionBudget", {}, language), groups.budget || [], "print-budget-section");
+  appendPrintSection(report, t("sectionSustainability", {}, language), groups.sustainability || [], "print-sustainability-section");
+  appendPrintSection(report, t("sectionWeather", {}, language), groups.weather || [], "print-weather-section");
+  appendPrintSection(report, t("sectionSmartNextSteps", {}, language), groups.next || [], "print-next-section");
+
+  const footer = printElement("footer", "print-report-footer");
+  footer.textContent = `${appBaseUrl()} · Eco Travel Planner v${APP_VERSION}`;
+  report.appendChild(footer);
+  return report;
+}
+
+function exportTripPlanPdf(row, content = "") {
   if (!row) return;
 
   clearTripPrintTarget();
   row.classList.add("print-target");
-  document.body.classList.add("printing-trip-plan");
+  activePrintReport = createPrintableTripReport(content, row);
+  document.body.appendChild(activePrintReport);
+  document.body.classList.add("printing-trip-report");
 
   window.setTimeout(() => {
     window.print();
     printCleanupTimer = window.setTimeout(clearTripPrintTarget, 120000);
-  }, 60);
+  }, 80);
 }
+
 
 function createTripPlanActions(row, content) {
   const actions = document.createElement("div");
@@ -1610,7 +1919,7 @@ function createTripPlanActions(row, content) {
 
   buttons[0].addEventListener("click", () => copyTripPlan(content, row, buttons[0]));
   buttons[1].addEventListener("click", () => shareTripPlan(content, row, buttons[1]));
-  buttons[2].addEventListener("click", () => exportTripPlanPdf(row));
+  buttons[2].addEventListener("click", () => exportTripPlanPdf(row, content));
 
   buttons.forEach((button) => actions.appendChild(button));
   actions.appendChild(status);
@@ -1765,6 +2074,7 @@ function appendMessage(role, content, meta = "", attachments = [], historyIndex 
     const meta = languageMeta(planSettings.language);
     row.dataset.planLanguage = planSettings.language;
     row.dataset.planCreatedAt = createdAt;
+    row.dataset.planSettings = JSON.stringify(planSettings);
     row.dir = meta.dir;
     stack.appendChild(createTripPrintMeta(planSettings, createdAt));
   }
@@ -2516,6 +2826,7 @@ function shareSession(sessionId) {
   openShareDialog({
     history: sessionMessages(session),
     title: session.title,
+    settings: session.settings,
   });
 }
 
@@ -2680,58 +2991,189 @@ function decodeShareData(value) {
   return new TextDecoder().decode(bytes);
 }
 
-function buildShareLink(items = history, title = "") {
+const SHORT_SHARE_ID_PATTERN = /^[A-Za-z0-9]{4,32}$/;
+
+function appBaseUrl() {
+  if (window.location.protocol === "file:") return "http://127.0.0.1:8000";
+  return window.location.origin;
+}
+
+function legacyShareLink(items = history, title = "") {
   const shareHistory = normalizeMessages(items).slice(-MAX_HISTORY_MESSAGES);
   const payload = {
-    version: 1,
+    version: APP_VERSION,
     title: title || (shareHistory.length ? titleFromHistory(shareHistory) : "Eco Travel Planner chat"),
     createdAt: new Date().toISOString(),
     history: shareHistory,
+    settings: readTripSettings(),
   };
   const encoded = encodeShareData(JSON.stringify(payload));
-  const baseUrl =
-    window.location.protocol === "file:"
-      ? "http://127.0.0.1:8000/"
-      : `${window.location.origin}${window.location.pathname}`;
-  return `${baseUrl}${SHARE_HASH_PREFIX}${encoded}`;
+  return `${appBaseUrl()}/${SHARE_HASH_PREFIX}${encoded}`;
 }
 
-function tryLoadSharedConversation() {
+function sharePayload(options = {}) {
+  const shareHistory = normalizeMessages(options.history || history).slice(-MAX_HISTORY_MESSAGES);
+  return {
+    version: APP_VERSION,
+    title: options.title || (shareHistory.length ? titleFromHistory(shareHistory) : "Eco Travel Planner chat"),
+    createdAt: options.createdAt || new Date().toISOString(),
+    history: shareHistory,
+    settings: normalizeTripSettings(options.settings || findCurrentSession()?.settings || readTripSettings()),
+  };
+}
+
+async function createShortShareLink(options = {}) {
+  const payload = sharePayload(options);
+
+  if (!payload.history.length) {
+    throw new Error(t("shareNoContent"));
+  }
+
+  const response = await fetch(`${API_BASE}/api/shares`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.url) {
+    throw new Error(detailToText(data.detail) || t("shareCreateFailed"));
+  }
+
+  return data;
+}
+
+function shortShareIdFromLocation() {
+  const pathMatch = window.location.pathname.match(/^\/share\/([A-Za-z0-9]{4,32})\/?$/);
+  if (pathMatch) return pathMatch[1];
+
+  const queryId = new URLSearchParams(window.location.search).get("share");
+  if (queryId && SHORT_SHARE_ID_PATTERN.test(queryId)) return queryId;
+
+  if (window.location.hash.startsWith(SHARE_HASH_PREFIX)) {
+    const value = window.location.hash.slice(SHARE_HASH_PREFIX.length);
+    if (SHORT_SHARE_ID_PATTERN.test(value)) return value;
+  }
+
+  return "";
+}
+
+function loadSharedPayload(payload, { cleanLegacyUrl = false } = {}) {
+  const sharedHistory = normalizeMessages(payload.history).slice(-MAX_HISTORY_MESSAGES);
+  if (!sharedHistory.length) return false;
+
+  if (history.length) {
+    saveCurrentSession();
+  }
+
+  currentSessionId = createSessionId();
+  localStorage.setItem(currentSessionKey, currentSessionId);
+  history = sharedHistory;
+
+  if (payload.settings) {
+    applyTripSettings(payload.settings);
+  }
+
+  writeHistoryOnly();
+  saveCurrentSession();
+
+  if (cleanLegacyUrl) {
+    window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
+  }
+
+  return true;
+}
+
+async function loadShortShare(shareId) {
+  const response = await fetch(`${API_BASE}/api/shares/${encodeURIComponent(shareId)}`);
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(detailToText(payload.detail) || t("shareCreateFailed"));
+  }
+
+  return loadSharedPayload(payload);
+}
+
+function tryLoadLegacySharedConversation() {
   if (!window.location.hash.startsWith(SHARE_HASH_PREFIX)) return false;
 
+  const encoded = window.location.hash.slice(SHARE_HASH_PREFIX.length);
+  if (SHORT_SHARE_ID_PATTERN.test(encoded)) return false;
+
   try {
-    const encoded = window.location.hash.slice(SHARE_HASH_PREFIX.length);
     const payload = JSON.parse(decodeShareData(encoded));
-    const sharedHistory = normalizeMessages(payload.history).slice(-MAX_HISTORY_MESSAGES);
-    if (!sharedHistory.length) return false;
-
-    if (history.length) {
-      saveCurrentSession();
-    }
-
-    currentSessionId = createSessionId();
-    localStorage.setItem(currentSessionKey, currentSessionId);
-    history = sharedHistory;
-    writeHistoryOnly();
-    saveCurrentSession();
-    window.history.replaceState(null, document.title, `${window.location.pathname}${window.location.search}`);
-    return true;
+    return loadSharedPayload(payload, { cleanLegacyUrl: true });
   } catch (error) {
-    console.warn("Could not load shared conversation.", error);
+    console.warn("Could not load legacy shared conversation.", error);
     return false;
   }
 }
 
-function openShareDialog(options = {}) {
+async function tryLoadSharedConversation() {
+  const shareId = shortShareIdFromLocation();
+  if (shareId) {
+    try {
+      return await loadShortShare(shareId);
+    } catch (error) {
+      console.warn("Could not load short share link.", error);
+      return false;
+    }
+  }
+
+  return tryLoadLegacySharedConversation();
+}
+
+async function openShareDialog(options = {}) {
   if (!shareOverlay || !shareLinkInput) return;
 
-  shareLinkInput.value = buildShareLink(options.history || history, options.title || "");
   shareOverlay.hidden = false;
-  copyShareButton.textContent = t("copyLink");
-  window.setTimeout(() => {
-    shareLinkInput.focus();
-    shareLinkInput.select();
-  }, 0);
+  shareLinkInput.value = "";
+  shareLinkInput.placeholder = t("creatingShareLink");
+  copyShareButton.disabled = true;
+  copyShareButton.textContent = t("creatingShareLink");
+
+  try {
+    const data = await createShortShareLink(options);
+    const link = data.url;
+    const title = options.title || titleFromHistory(options.history || history);
+
+    shareLinkInput.value = link;
+    shareLinkInput.placeholder = "";
+    copyShareButton.disabled = false;
+
+    try {
+      await writeClipboardText(link);
+      copyShareButton.textContent = t("shareLinkCopied");
+    } catch {
+      copyShareButton.textContent = t("copyLink");
+    }
+
+    if (navigator.share && isMobileLayout()) {
+      try {
+        await navigator.share({ title, text: link, url: link });
+      } catch (error) {
+        if (!isShareCancellation(error)) {
+          console.warn("Native sharing failed.", error);
+        }
+      }
+    }
+
+    window.setTimeout(() => {
+      if (!copyShareButton.disabled) copyShareButton.textContent = t("copyLink");
+    }, 1800);
+
+    window.setTimeout(() => {
+      shareLinkInput.focus();
+      shareLinkInput.select();
+    }, 0);
+  } catch (error) {
+    console.warn("Could not create share link.", error);
+    shareLinkInput.placeholder = "";
+    shareLinkInput.value = error?.message || t("shareCreateFailed");
+    copyShareButton.textContent = t("shareCreateFailed");
+    copyShareButton.disabled = true;
+  }
 }
 
 function closeShareDialog() {
@@ -2741,19 +3183,21 @@ function closeShareDialog() {
 }
 
 async function copyShareLink() {
-  const link = shareLinkInput.value || buildShareLink();
+  const link = shareLinkInput.value;
+  if (!link || copyShareButton.disabled) return;
 
   try {
-    await navigator.clipboard.writeText(link);
+    await writeClipboardText(link);
+    copyShareButton.textContent = t("shareLinkCopied");
   } catch {
     shareLinkInput.focus();
     shareLinkInput.select();
     document.execCommand("copy");
+    copyShareButton.textContent = t("copied");
   }
 
-  copyShareButton.textContent = t("copied");
   window.setTimeout(() => {
-    copyShareButton.textContent = t("copyLink");
+    if (!copyShareButton.disabled) copyShareButton.textContent = t("copyLink");
   }, 1400);
 }
 
@@ -3074,7 +3518,7 @@ recentsToggleButton?.addEventListener("click", () => {
   if (shouldOpen) renderRecents();
 });
 
-shareButton?.addEventListener("click", openShareDialog);
+shareButton?.addEventListener("click", () => openShareDialog());
 closeShareButton?.addEventListener("click", closeShareDialog);
 copyShareButton?.addEventListener("click", copyShareLink);
 renameForm?.addEventListener("submit", renameActiveSession);
@@ -3161,19 +3605,23 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("afterprint", clearTripPrintTarget);
 
-window.addEventListener("hashchange", () => {
-  if (tryLoadSharedConversation()) {
+window.addEventListener("hashchange", async () => {
+  if (await tryLoadSharedConversation()) {
     bootstrapSessions();
     renderHistory();
   }
 });
+
+async function initializeApp() {
+  await tryLoadSharedConversation();
+  bootstrapSessions();
+  renderHistory();
+  autoResizeInput();
+}
 
 form.addEventListener("submit", submitPlan);
 setupLanguagePreference();
 setupThemePreference();
 registerServiceWorker();
 recognition = setupVoiceRecognition();
-tryLoadSharedConversation();
-bootstrapSessions();
-renderHistory();
-autoResizeInput();
+initializeApp();

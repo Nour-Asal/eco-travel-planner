@@ -2,16 +2,24 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.config import settings
-from backend.schemas import ServiceNotice, TripPlanRequest, TripPlanResponse
+from backend.schemas import (
+    ServiceNotice,
+    ShareCreateRequest,
+    ShareCreateResponse,
+    ShareSnapshot,
+    TripPlanRequest,
+    TripPlanResponse,
+)
 from backend.services.ai import generate_trip_plan
 from backend.services.cities import detect_city
 from backend.services.places import PlacesServiceError, format_places_context, search_places
+from backend.services.shares import ShareStorageError, create_share, get_share
 from backend.services.weather import WeatherServiceError, format_weather_context, get_weather
 
 
@@ -88,6 +96,36 @@ async def plan_trip(request: TripPlanRequest) -> TripPlanResponse:
         used_live_weather=bool(weather),
         used_location_context=bool(places),
     )
+
+
+@app.post("/api/shares", response_model=ShareCreateResponse)
+async def create_share_link(
+    share: ShareCreateRequest,
+    request: Request,
+) -> ShareCreateResponse:
+    try:
+        share_id = await create_share(share)
+    except ShareStorageError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    base_url = str(request.base_url).rstrip("/")
+    return ShareCreateResponse(id=share_id, url=f"{base_url}/share/{share_id}")
+
+
+@app.get("/api/shares/{share_id}", response_model=ShareSnapshot)
+async def read_share_link(share_id: str) -> ShareSnapshot:
+    if not share_id.isalnum() or not 4 <= len(share_id) <= 32:
+        raise HTTPException(status_code=404, detail="Share link not found.")
+
+    try:
+        share = await get_share(share_id)
+    except ShareStorageError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if not share:
+        raise HTTPException(status_code=404, detail="Share link not found.")
+
+    return share
 
 
 @app.get("/{path:path}")

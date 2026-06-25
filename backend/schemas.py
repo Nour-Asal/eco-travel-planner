@@ -64,3 +64,29 @@ class TripPlanResponse(BaseModel):
     model: str
     used_live_weather: bool
     used_location_context: bool
+
+
+class ShareTripSettings(BaseModel):
+    language: Language = "English"
+    budget: BudgetLevel = "Smart value"
+    travelStyle: TravelStyle = "Balanced"
+    days: int = Field(default=5, ge=1, le=45)
+    travelers: int = Field(default=2, ge=1, le=20)
+    sustainability: int = Field(default=4, ge=1, le=5)
+
+
+class ShareSnapshot(BaseModel):
+    version: str = Field(default="1.0.0", min_length=1, max_length=30)
+    title: str = Field(default="Eco Travel Planner chat", min_length=1, max_length=120)
+    createdAt: str = Field(min_length=1, max_length=80)
+    history: list[ChatMessage] = Field(default_factory=list, min_length=1, max_length=80)
+    settings: ShareTripSettings = Field(default_factory=ShareTripSettings)
+
+
+class ShareCreateRequest(ShareSnapshot):
+    pass
+
+
+class ShareCreateResponse(BaseModel):
+    id: str
+    url: str

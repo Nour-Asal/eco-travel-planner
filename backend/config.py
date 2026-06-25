@@ -24,6 +24,7 @@ class Settings:
         "EcoTravelPlanner/1.0 local-development",
     )
     public_url: str = os.environ.get("APP_PUBLIC_URL", "http://127.0.0.1:8000")
+    database_url: str = os.environ.get("DATABASE_URL", "").strip()
 
 
 settings = Settings()

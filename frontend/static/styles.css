@@ -3544,6 +3544,49 @@ html[dir="rtl"] .floating-sidebar-toggle,
 }
 
 
+
+/* Sidebar drawer structure */
+.sidebar {
+  overflow: hidden;
+}
+
+.sidebar-content {
+  align-content: start;
+  display: grid;
+  flex: 1 1 auto;
+  gap: 12px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-gutter: stable;
+}
+
+:root[dir="rtl"] .sidebar-content,
+html[data-language="arabic"] .sidebar-content {
+  padding-left: 2px;
+  padding-right: 0;
+}
+
+.sidebar-footer {
+  margin-top: 12px;
+}
+
+@media (max-width: 768px) {
+  .sidebar,
+  body.sidebar-collapsed .sidebar {
+    overflow: hidden;
+  }
+
+  .sidebar-content {
+    padding-bottom: 4px;
+  }
+
+  .sidebar-footer {
+    margin-top: 12px;
+  }
+}
+
 /* Sidebar footer branding */
 .sidebar-footer {
   background: color-mix(in srgb, var(--panel) 72%, transparent);
@@ -3998,6 +4041,7 @@ html[data-language="arabic"] .sidebar-footer {
   }
 }
 
+.trip-print-report,
 .trip-print-meta {
   display: none;
 }
@@ -4078,7 +4122,14 @@ html[data-language="arabic"] .sidebar-footer {
 
 @media print {
   @page {
-    margin: 18mm;
+    margin: 16mm 14mm 18mm;
+    size: A4;
+
+    @bottom-center {
+      content: "Eco Travel Planner v1.0.0 · " counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #6b7280;
+    }
   }
 
   html,
@@ -4254,6 +4305,196 @@ html[data-language="arabic"] .sidebar-footer {
   body.printing-trip-plan .message-actions,
   body.printing-trip-plan .trip-plan-actions {
     display: none !important;
+  }
+
+
+  body.printing-trip-report .app-shell,
+  body.printing-trip-report .top-actions,
+  body.printing-trip-report .floating-sidebar-toggle,
+  body.printing-trip-report .sidebar,
+  body.printing-trip-report .composer,
+  body.printing-trip-report .share-overlay,
+  body.printing-trip-report .rename-overlay {
+    display: none !important;
+  }
+
+  body.printing-trip-report {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  body.printing-trip-report .trip-print-report {
+    background: #ffffff !important;
+    color: #111827 !important;
+    display: block !important;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    margin: 0;
+    max-width: none;
+    overflow: visible;
+    width: 100%;
+  }
+
+  body.printing-trip-report .trip-print-report[dir="rtl"] {
+    direction: rtl;
+    font-family: Inter, "Segoe UI", Tahoma, Arial, sans-serif;
+    text-align: right;
+  }
+
+  body.printing-trip-report .trip-print-report[dir="ltr"] {
+    direction: ltr;
+    text-align: left;
+  }
+
+  body.printing-trip-report .print-cover {
+    border-bottom: 2px solid #0f766e;
+    margin-bottom: 12mm;
+    padding: 0 0 8mm;
+  }
+
+  body.printing-trip-report .print-kicker {
+    color: #0f766e;
+    font-size: 9pt;
+    font-weight: 850;
+    letter-spacing: 0;
+    margin: 0 0 5mm;
+    text-transform: uppercase;
+  }
+
+  body.printing-trip-report .print-title {
+    color: #111827;
+    font-size: 24pt;
+    line-height: 1.12;
+    margin: 0 0 5mm;
+  }
+
+  body.printing-trip-report .print-credit,
+  body.printing-trip-report .print-version,
+  body.printing-trip-report .print-date {
+    color: #4b5563;
+    font-size: 9.5pt;
+    margin: 1.5mm 0 0;
+  }
+
+  body.printing-trip-report .print-section {
+    break-inside: avoid;
+    margin: 0 0 8mm;
+    page-break-inside: avoid;
+  }
+
+  body.printing-trip-report .print-itinerary-section,
+  body.printing-trip-report .print-budget-section {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  body.printing-trip-report .print-section-title {
+    border-bottom: 1px solid #d1d5db;
+    color: #0f766e;
+    font-size: 14pt;
+    line-height: 1.25;
+    margin: 0 0 4mm;
+    padding-bottom: 2mm;
+  }
+
+  body.printing-trip-report .print-subheading {
+    color: #111827;
+    font-size: 11.5pt;
+    line-height: 1.35;
+    margin: 5mm 0 2mm;
+  }
+
+  body.printing-trip-report .print-paragraph {
+    color: #1f2937;
+    margin: 0 0 3mm;
+    orphans: 3;
+    widows: 3;
+  }
+
+  body.printing-trip-report .print-list {
+    color: #1f2937;
+    margin: 0 0 4mm;
+    padding-left: 5mm;
+  }
+
+  body.printing-trip-report .trip-print-report[dir="rtl"] .print-list {
+    padding-left: 0;
+    padding-right: 5mm;
+  }
+
+  body.printing-trip-report .print-list li {
+    margin: 0 0 1.5mm;
+  }
+
+  body.printing-trip-report .print-table {
+    border-collapse: collapse;
+    color: #111827;
+    font-size: 9.5pt;
+    margin: 0 0 5mm;
+    page-break-inside: avoid;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  body.printing-trip-report .print-table th,
+  body.printing-trip-report .print-table td {
+    border: 1px solid #d1d5db;
+    padding: 2.5mm 3mm;
+    text-align: start;
+    vertical-align: top;
+    word-break: break-word;
+  }
+
+  body.printing-trip-report .print-table thead th,
+  body.printing-trip-report .print-settings-table th {
+    background: #ecfdf5;
+    color: #065f46;
+    font-weight: 850;
+  }
+
+  body.printing-trip-report .print-settings-table {
+    max-width: 100%;
+  }
+
+  body.printing-trip-report .print-settings-table th {
+    width: 34%;
+  }
+
+  body.printing-trip-report .print-day-grid {
+    display: grid;
+    gap: 5mm;
+  }
+
+  body.printing-trip-report .print-day-card {
+    border: 1px solid #d1d5db;
+    border-left: 4px solid #0f766e;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    padding: 5mm;
+  }
+
+  body.printing-trip-report .trip-print-report[dir="rtl"] .print-day-card {
+    border-left: 1px solid #d1d5db;
+    border-right: 4px solid #0f766e;
+  }
+
+  body.printing-trip-report .print-day-title {
+    color: #111827;
+    font-size: 12pt;
+    line-height: 1.35;
+    margin: 0 0 3mm;
+  }
+
+  body.printing-trip-report .print-report-footer {
+    border-top: 1px solid #d1d5db;
+    color: #6b7280;
+    font-size: 8.5pt;
+    margin-top: 8mm;
+    padding-top: 3mm;
   }
 }
 

@@ -27,10 +27,10 @@
         }
       })();
     </script>
-    <link rel="manifest" href="./manifest.json" />
-    <link rel="icon" href="./static/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./static/icons/icon-192.svg" />
-    <link rel="stylesheet" href="./static/styles.css?v=10" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.svg" />
+    <link rel="stylesheet" href="/static/styles.css?v=12" />
   </head>
   <body>
     <button class="floating-sidebar-toggle icon-button sidebar-toggle-button" id="openSidebarButton" type="button" aria-label="Open sidebar" title="Open sidebar" data-i18n-aria-label="openSidebar" data-i18n-title="openSidebar">
@@ -83,7 +83,7 @@
         <header class="sidebar-brand">
           <a class="brand" href="/" aria-label="Eco Travel Planner home">
             <span class="brand-mark">
-              <img class="brand-logo" src="./static/favicon.svg" alt="" />
+              <img class="brand-logo" src="/static/favicon.svg" alt="" />
             </span>
             <span>
               <strong>Eco Travel Planner</strong>
@@ -98,28 +98,29 @@
           </button>
         </header>
 
-        <div class="sidebar-actions">
-          <button class="new-chat-button" id="newChatButton" type="button" title="New trip" data-i18n-title="newTrip">
-            <span class="sidebar-action-icon" aria-hidden="true">+</span>
-            <span class="sidebar-action-label" data-i18n="newTrip">New trip</span>
-          </button>
-          <button class="clear-chat-button" id="clearHistoryButton" type="button" title="Clear current chat" data-i18n-title="clearCurrentChat">
-            <span class="sidebar-action-icon" aria-hidden="true">x</span>
-            <span class="sidebar-action-label" data-i18n="clearChat">Clear chat</span>
-          </button>
-        </div>
+        <div class="sidebar-content">
+          <div class="sidebar-actions">
+            <button class="new-chat-button" id="newChatButton" type="button" title="New trip" data-i18n-title="newTrip">
+              <span class="sidebar-action-icon" aria-hidden="true">+</span>
+              <span class="sidebar-action-label" data-i18n="newTrip">New trip</span>
+            </button>
+            <button class="clear-chat-button" id="clearHistoryButton" type="button" title="Clear current chat" data-i18n-title="clearCurrentChat">
+              <span class="sidebar-action-icon" aria-hidden="true">x</span>
+              <span class="sidebar-action-label" data-i18n="clearChat">Clear chat</span>
+            </button>
+          </div>
 
-        <section class="recents-card" aria-label="Recent chats" data-i18n-aria-label="recentChats">
-          <button class="recents-toggle" id="recentsToggleButton" type="button" aria-expanded="false" title="Recents" data-i18n-title="recents">
-            <span class="recents-icon" aria-hidden="true"></span>
-            <span data-i18n="recents">Recents</span>
-            <strong id="recentsCount">0</strong>
-          </button>
-          <div class="recents-list" id="recentsList" hidden></div>
-        </section>
+          <section class="recents-card" aria-label="Recent chats" data-i18n-aria-label="recentChats">
+            <button class="recents-toggle" id="recentsToggleButton" type="button" aria-expanded="false" title="Recents" data-i18n-title="recents">
+              <span class="recents-icon" aria-hidden="true"></span>
+              <span data-i18n="recents">Recents</span>
+              <strong id="recentsCount">0</strong>
+            </button>
+            <div class="recents-list" id="recentsList" hidden></div>
+          </section>
 
-        <section class="settings-card">
-          <div class="settings-card-header">
+          <section class="settings-card">
+            <div class="settings-card-header">
             <div class="section-label" data-i18n="tripSettings">Trip settings</div>
             <button class="reset-settings-button" id="resetSettingsButton" type="button" data-i18n="resetSettings" data-i18n-title="resetSettings" title="Reset settings">Reset</button>
           </div>
@@ -177,7 +178,8 @@
               <span data-i18n="higherImpact">Higher</span>
             </small>
           </label>
-        </section>
+          </section>
+        </div>
 
         <footer class="sidebar-footer" aria-label="App information" data-i18n-aria-label="appInformation">
           <p data-i18n="sidebarCredit">Designed &amp; Built by Nour Asal</p>
@@ -281,6 +283,6 @@
       </section>
     </div>
 
-    <script src="./static/app.js?v=10" type="module"></script>
+    <script src="/static/app.js?v=12" type="module"></script>
   </body>
 </html>
