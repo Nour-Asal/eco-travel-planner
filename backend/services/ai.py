@@ -4,7 +4,7 @@ import httpx
 from fastapi import HTTPException
 
 from backend.config import settings
-from backend.prompts import build_system_prompt
+from backend.prompts import build_system_prompt, max_tokens_for_mode, response_mode_for
 from backend.schemas import AttachmentInput, ChatMessage, TripPlanRequest
 
 
@@ -85,10 +85,11 @@ async def generate_trip_plan(
             detail="OPENROUTER_API_KEY is missing. Add it to .env before using planning.",
         )
 
+    response_mode = response_mode_for(request)
     messages = [
         {
             "role": "system",
-            "content": build_system_prompt(request, weather_context, places_context),
+            "content": build_system_prompt(request, weather_context, places_context, response_mode),
         },
         *_format_history(request.history),
         {"role": "user", "content": _build_user_content(request)},
@@ -105,7 +106,7 @@ async def generate_trip_plan(
         "model": settings.openrouter_model,
         "messages": messages,
         "temperature": 0.62,
-        "max_tokens": 1600,
+        "max_tokens": max_tokens_for_mode(response_mode),
     }
 
     try:

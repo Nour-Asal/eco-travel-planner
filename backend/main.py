@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,13 +13,18 @@ from backend.schemas import (
     ShareCreateRequest,
     ShareCreateResponse,
     ShareSnapshot,
+    BudgetLevel,
+    Language,
+    OfferSearchResponse,
     TripPlanRequest,
     TripPlanResponse,
 )
 from backend.services.ai import generate_trip_plan
 from backend.services.cities import detect_city
+from backend.services.flights import get_mock_flight_offers
 from backend.services.places import PlacesServiceError, format_places_context, search_places
 from backend.services.shares import ShareStorageError, create_share, get_share
+from backend.services.stays import get_mock_stay_offers
 from backend.services.weather import WeatherServiceError, format_weather_context, get_weather
 
 
@@ -30,7 +35,7 @@ STATIC_DIR = FRONTEND_DIR / "static"
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.0.0",
+    version="1.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -95,6 +100,48 @@ async def plan_trip(request: TripPlanRequest) -> TripPlanResponse:
         model=settings.openrouter_model,
         used_live_weather=bool(weather),
         used_location_context=bool(places),
+    )
+
+
+@app.get("/api/offers/flights", response_model=OfferSearchResponse)
+async def flight_offers(
+    origin: str = Query(default="", max_length=120),
+    destination: str = Query(default="", max_length=120),
+    departureDate: str = Query(default="", max_length=40),
+    returnDate: str = Query(default="", max_length=40),
+    travelers: int = Query(default=1, ge=1, le=12),
+    budget: BudgetLevel = "Smart value",
+    language: Language = "English",
+) -> OfferSearchResponse:
+    return get_mock_flight_offers(
+        origin=origin,
+        destination=destination,
+        departureDate=departureDate,
+        returnDate=returnDate,
+        travelers=travelers,
+        budget=budget,
+        language=language,
+    )
+
+
+@app.get("/api/offers/stays", response_model=OfferSearchResponse)
+async def stay_offers(
+    origin: str = Query(default="", max_length=120),
+    destination: str = Query(default="", max_length=120),
+    departureDate: str = Query(default="", max_length=40),
+    returnDate: str = Query(default="", max_length=40),
+    travelers: int = Query(default=1, ge=1, le=12),
+    budget: BudgetLevel = "Smart value",
+    language: Language = "English",
+) -> OfferSearchResponse:
+    return get_mock_stay_offers(
+        origin=origin,
+        destination=destination,
+        departureDate=departureDate,
+        returnDate=returnDate,
+        travelers=travelers,
+        budget=budget,
+        language=language,
     )
 
 

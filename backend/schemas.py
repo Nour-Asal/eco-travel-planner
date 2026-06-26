@@ -10,9 +10,43 @@ TravelStyle = Literal["Balanced", "Relaxed", "Adventure", "Family", "Business"]
 BudgetLevel = Literal["Economy", "Smart value", "Premium", "Luxury"]
 
 
+OfferType = Literal["flight", "hotel", "apartment"]
+
+
+class TravelOffer(BaseModel):
+    id: str = Field(min_length=1, max_length=80)
+    type: OfferType
+    provider: str = Field(min_length=1, max_length=80)
+    title: str = Field(min_length=1, max_length=160)
+    subtitle: str = Field(default="", max_length=220)
+    imageUrl: str = Field(default="", max_length=600)
+    price: float = Field(ge=0)
+    currency: str = Field(default="USD", min_length=3, max_length=3)
+    rating: float | None = Field(default=None, ge=0, le=5)
+    location: str = Field(default="", max_length=160)
+    duration: str = Field(default="", max_length=80)
+    stops: int | None = Field(default=None, ge=0, le=8)
+    departureTime: str = Field(default="", max_length=80)
+    arrivalTime: str = Field(default="", max_length=80)
+    cancellationPolicy: str = Field(default="", max_length=180)
+    bookingUrl: str = Field(default="", max_length=600)
+    badges: list[str] = Field(default_factory=list, max_length=8)
+    pros: list[str] = Field(default_factory=list, max_length=6)
+    cons: list[str] = Field(default_factory=list, max_length=6)
+    score: float = Field(default=0, ge=0, le=100)
+
+
+class OfferSearchResponse(BaseModel):
+    offers: list[TravelOffer] = Field(default_factory=list, max_length=24)
+    provider: str = "mock"
+    isMock: bool = True
+    query: dict[str, str | int | None] = Field(default_factory=dict)
+
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=6000)
+    offers: list[TravelOffer] = Field(default_factory=list, max_length=24)
 
 
 class AttachmentInput(BaseModel):
@@ -76,7 +110,7 @@ class ShareTripSettings(BaseModel):
 
 
 class ShareSnapshot(BaseModel):
-    version: str = Field(default="1.0.0", min_length=1, max_length=30)
+    version: str = Field(default="1.1.0", min_length=1, max_length=30)
     title: str = Field(default="Eco Travel Planner chat", min_length=1, max_length=120)
     createdAt: str = Field(min_length=1, max_length=80)
     history: list[ChatMessage] = Field(default_factory=list, min_length=1, max_length=80)
