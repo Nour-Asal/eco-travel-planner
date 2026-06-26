@@ -110,7 +110,7 @@ class ShareTripSettings(BaseModel):
 
 
 class ShareSnapshot(BaseModel):
-    version: str = Field(default="1.1.0", min_length=1, max_length=30)
+    version: str = Field(default="1.2.0", min_length=1, max_length=30)
     title: str = Field(default="Eco Travel Planner chat", min_length=1, max_length=120)
     createdAt: str = Field(min_length=1, max_length=80)
     history: list[ChatMessage] = Field(default_factory=list, min_length=1, max_length=80)

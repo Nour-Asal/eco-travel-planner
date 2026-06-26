@@ -4,7 +4,7 @@ const MAX_HISTORY_MESSAGES = 80;
 const MAX_CONTEXT_MESSAGES = 12;
 const MAX_SESSIONS = 18;
 const SHARE_HASH_PREFIX = "#share=";
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.2.0";
 
 const form = document.querySelector("#plannerForm");
 const messageInput = document.querySelector("#messageInput");

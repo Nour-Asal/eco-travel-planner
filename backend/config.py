@@ -25,6 +25,8 @@ class Settings:
     )
     public_url: str = os.environ.get("APP_PUBLIC_URL", "http://127.0.0.1:8000")
     database_url: str = os.environ.get("DATABASE_URL", "").strip()
+    duffel_access_token: str = os.environ.get("DUFFEL_ACCESS_TOKEN", "").strip()
+    duffel_env: str = os.environ.get("DUFFEL_ENV", "test").strip() or "test"
 
 
 settings = Settings()

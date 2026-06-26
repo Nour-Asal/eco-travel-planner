@@ -21,7 +21,7 @@ from backend.schemas import (
 )
 from backend.services.ai import generate_trip_plan
 from backend.services.cities import detect_city
-from backend.services.flights import get_mock_flight_offers
+from backend.services.flights import get_flight_offers
 from backend.services.places import PlacesServiceError, format_places_context, search_places
 from backend.services.shares import ShareStorageError, create_share, get_share
 from backend.services.stays import get_mock_stay_offers
@@ -35,7 +35,7 @@ STATIC_DIR = FRONTEND_DIR / "static"
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.1.0",
+    version="1.2.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -110,10 +110,10 @@ async def flight_offers(
     departureDate: str = Query(default="", max_length=40),
     returnDate: str = Query(default="", max_length=40),
     travelers: int = Query(default=1, ge=1, le=12),
-    budget: BudgetLevel = "Smart value",
-    language: Language = "English",
+    budget: str = Query(default="Smart value", max_length=40),
+    language: str = Query(default="English", max_length=20),
 ) -> OfferSearchResponse:
-    return get_mock_flight_offers(
+    return await get_flight_offers(
         origin=origin,
         destination=destination,
         departureDate=departureDate,
