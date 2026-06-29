@@ -1,10 +1,10 @@
-const CACHE_NAME = "eco-travel-planner-v15";
+const CACHE_NAME = "eco-travel-planner-v17";
 
 const APP_SHELL = [
   "/",
   "/manifest.json",
-  "/static/app.js?v=15",
-  "/static/styles.css?v=15",
+  "/static/app.js?v=17",
+  "/static/styles.css?v=17",
   "/static/favicon.svg",
   "/static/icons/icon-192.svg",
   "/static/icons/icon-512.svg",

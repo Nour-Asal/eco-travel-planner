@@ -35,7 +35,7 @@ STATIC_DIR = FRONTEND_DIR / "static"
 
 app = FastAPI(
     title=settings.app_name,
-    version="1.2.0",
+    version="1.2.1",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )

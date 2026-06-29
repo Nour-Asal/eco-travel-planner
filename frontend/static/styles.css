@@ -544,11 +544,29 @@ input[type="range"] {
 }
 
 
+.message-row.has-offers {
+  max-width: min(1320px, 100%);
+}
+
+.message-row.has-offers .message-stack,
+.assistant.message-row.has-offers .message-stack {
+  justify-items: stretch;
+  width: 100%;
+}
+
+.message-row.has-offers .message-bubble {
+  inline-size: fit-content;
+  justify-self: start;
+  max-width: min(760px, 100%);
+}
+
 .offer-panel {
   display: grid;
-  gap: 16px;
-  margin-top: 8px;
-  max-width: min(860px, 100%);
+  gap: 18px;
+  justify-self: stretch;
+  margin-top: 10px;
+  max-width: min(1240px, 100%);
+  min-width: 0;
   overflow: hidden;
   width: 100%;
 }
@@ -591,13 +609,16 @@ input[type="range"] {
   border: 1px solid var(--line);
   border-radius: 12px;
   display: grid;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-color: rgba(45, 212, 191, 0.35) transparent;
 }
 
 .offer-mini-row {
   display: grid;
   gap: 8px;
   grid-template-columns: minmax(0, 1.45fr) minmax(72px, 0.65fr) minmax(82px, 0.75fr);
+  min-width: 520px;
 }
 
 .offer-mini-row span {
@@ -624,16 +645,74 @@ input[type="range"] {
 
 .offer-carousel {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   max-width: 100%;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 2px 2px 12px;
-  scroll-padding-inline: 2px;
+  padding: 4px max(14px, env(safe-area-inset-left)) 14px;
+  scroll-padding-inline: max(14px, env(safe-area-inset-left));
   scroll-snap-type: inline mandatory;
   scrollbar-color: rgba(45, 212, 191, 0.45) transparent;
   -webkit-overflow-scrolling: touch;
+}
+
+.offer-carousel-shell {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  grid-template-areas: "previous carousel next";
+  grid-template-columns: 38px minmax(0, 1fr) 38px;
+  min-width: 0;
+  width: 100%;
+}
+
+.offer-carousel-shell .offer-carousel {
+  grid-area: carousel;
+  width: 100%;
+}
+
+.offer-carousel-arrow {
+  align-items: center;
+  align-self: center;
+  background: rgba(17, 24, 34, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1rem;
+  font-weight: 800;
+  height: 36px;
+  justify-content: center;
+  padding: 0;
+  transition: border-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  width: 36px;
+}
+
+.offer-carousel-arrow-previous {
+  grid-area: previous;
+}
+
+.offer-carousel-arrow-next {
+  grid-area: next;
+}
+
+.offer-carousel-arrow:hover:not(:disabled),
+.offer-carousel-arrow:focus-visible {
+  border-color: var(--accent-line);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.offer-carousel-arrow:disabled {
+  cursor: default;
+  opacity: 0.28;
+}
+
+:root[dir="rtl"] .offer-carousel-shell {
+  grid-template-areas: "next carousel previous";
 }
 
 .offer-card {
@@ -642,9 +721,9 @@ input[type="range"] {
   border-radius: 16px;
   box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
   display: flex;
-  flex: 0 0 292px;
+  flex: 0 0 clamp(306px, 28vw, 348px);
   flex-direction: column;
-  min-height: 390px;
+  min-height: 404px;
   min-width: 0;
   overflow: hidden;
   scroll-snap-align: start;
@@ -667,6 +746,131 @@ input[type="range"] {
   height: 100%;
   object-fit: cover;
   width: 100%;
+}
+
+
+.flight-visual {
+  align-items: stretch;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(45, 212, 191, 0.34), transparent 34%),
+    radial-gradient(circle at 82% 8%, rgba(56, 189, 248, 0.22), transparent 32%),
+    linear-gradient(135deg, rgba(9, 16, 26, 0.98), rgba(11, 37, 48, 0.96));
+  color: #f8fafc;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  position: relative;
+}
+
+.flight-visual::before {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  content: "";
+  height: 1px;
+  inset: 50% 12px auto;
+  opacity: 0.55;
+  position: absolute;
+}
+
+.flight-visual-top,
+.flight-visual-meta {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.flight-airline-mark {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: #f8fafc;
+  display: inline-flex;
+  font-size: 0.72rem;
+  font-weight: 860;
+  gap: 7px;
+  max-width: 170px;
+  overflow: hidden;
+  padding: 6px 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.flight-airline-mark::before {
+  background: linear-gradient(135deg, #5eead4, #38bdf8);
+  border-radius: 50%;
+  content: "";
+  flex: 0 0 auto;
+  height: 10px;
+  width: 10px;
+}
+
+.flight-provider-chip {
+  background: rgba(4, 17, 15, 0.44);
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  border-radius: 999px;
+  color: #99f6e4;
+  font-size: 0.68rem;
+  font-weight: 850;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.flight-route-visual {
+  align-items: center;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: max-content minmax(84px, 1fr) max-content;
+  position: relative;
+  z-index: 1;
+}
+
+.flight-route-visual strong {
+  color: #ffffff;
+  font-size: 1.34rem;
+  line-height: 1;
+}
+
+.flight-route-line {
+  background: linear-gradient(90deg, rgba(94, 234, 212, 0.82), rgba(125, 211, 252, 0.88));
+  border-radius: 999px;
+  display: block;
+  height: 2px;
+  position: relative;
+}
+
+.flight-route-line::before,
+.flight-route-line::after {
+  background: #e0f2fe;
+  border: 2px solid rgba(15, 23, 42, 0.82);
+  border-radius: 50%;
+  content: "";
+  height: 10px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+}
+
+.flight-route-line::before { left: -1px; }
+.flight-route-line::after { right: -1px; }
+
+.flight-visual-meta {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.flight-visual-meta span {
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: rgba(248, 250, 252, 0.86);
+  font-size: 0.67rem;
+  font-weight: 760;
+  padding: 4px 7px;
 }
 
 .offer-card-body {
@@ -772,7 +976,16 @@ input[type="range"] {
 
 .offer-deal-button {
   background: var(--accent);
+  border: 0;
   color: #04110f;
+}
+
+.offer-deal-button.disabled,
+.offer-deal-button:disabled {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--line);
+  color: var(--muted-strong);
+  cursor: not-allowed;
 }
 
 .offer-save-button {
@@ -806,6 +1019,7 @@ input[type="range"] {
 @media (max-width: 760px) {
   .offer-panel {
     gap: 14px;
+    max-width: 100%;
     width: 100%;
   }
 
@@ -817,6 +1031,7 @@ input[type="range"] {
 
   .offer-mini-row {
     grid-template-columns: minmax(0, 1.2fr) minmax(68px, 0.7fr) minmax(74px, 0.75fr);
+    min-width: 430px;
   }
 
   .offer-mini-row span {
@@ -826,13 +1041,25 @@ input[type="range"] {
 
   .offer-carousel {
     gap: 10px;
-    margin-inline: -2px;
-    padding-bottom: 10px;
+    margin-inline: 0;
+    padding: 3px 8px 10px;
+    scroll-padding-inline: 8px;
+  }
+
+  .offer-carousel-shell {
+    gap: 5px;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+  }
+
+  .offer-carousel-arrow {
+    font-size: 0.86rem;
+    height: 28px;
+    width: 28px;
   }
 
   .offer-card {
-    flex-basis: min(286px, 84vw);
-    min-height: 382px;
+    flex-basis: min(292px, 78vw);
+    min-height: 392px;
   }
 }
 
@@ -4419,7 +4646,7 @@ html[data-language="arabic"] .sidebar-footer {
     size: A4;
 
     @bottom-center {
-      content: "Eco Travel Planner v1.2.0 · " counter(page) " / " counter(pages);
+      content: "Eco Travel Planner v1.2.1 · " counter(page) " / " counter(pages);
       font-size: 8pt;
       color: #6b7280;
     }

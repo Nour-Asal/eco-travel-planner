@@ -4,7 +4,7 @@ const MAX_HISTORY_MESSAGES = 80;
 const MAX_CONTEXT_MESSAGES = 12;
 const MAX_SESSIONS = 18;
 const SHARE_HASH_PREFIX = "#share=";
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.2.1";
 
 const form = document.querySelector("#plannerForm");
 const messageInput = document.querySelector("#messageInput");
@@ -156,11 +156,23 @@ const I18N = {
     offersFlightsTitle: "Flight options",
     offersStaysTitle: "Stays and apartments",
     offerComparisonTitle: "Quick comparison",
-    offerLoading: "Finding matching mock offers...",
-    offerEmpty: "No mock offers matched this request yet.",
+    offerLoading: "Finding matching offers...",
+    offerEmpty: "No matching offers are available right now.",
     offerError: "Could not load offer cards right now.",
     mockOffersNote: "Mock offers shown for UI preview",
+    liveDuffelOffers: "Live Duffel offers",
+    sampleOffers: "Sample offers",
+    liveFlightOfferMessage: "Here are the best available flight options by price, duration, and stops.",
+    sampleOfferMessage: "These are sample offers for preview, not final booking prices.",
     viewDeal: "View deal",
+    detailsComingSoon: "Details coming soon",
+    bookingUnavailable: "Booking flow is not connected yet.",
+    previousOffers: "Previous offers",
+    nextOffers: "Next offers",
+    directFlight: "Direct",
+    oneStop: "1 stop",
+    multipleStops: "{count} stops",
+    offerRecommendationFallback: "Balanced for price and trip details.",
     saveOffer: "Save",
     savedOffer: "Saved",
     recommendedBecause: "Why it fits",
@@ -345,11 +357,23 @@ const I18N = {
     offersFlightsTitle: "Uçuş seçenekleri",
     offersStaysTitle: "Konaklama ve daireler",
     offerComparisonTitle: "Hızlı karşılaştırma",
-    offerLoading: "Eşleşen örnek teklifler aranıyor...",
-    offerEmpty: "Bu istek için henüz eşleşen örnek teklif yok.",
+    offerLoading: "Eşleşen teklifler aranıyor...",
+    offerEmpty: "Şu anda eşleşen teklif bulunmuyor.",
     offerError: "Teklif kartları şu anda yüklenemedi.",
     mockOffersNote: "Arayüz önizlemesi için örnek teklifler",
+    liveDuffelOffers: "Canlı Duffel teklifleri",
+    sampleOffers: "Örnek teklifler",
+    liveFlightOfferMessage: "Fiyat, süre ve aktarma sayısına göre en iyi uçuş seçenekleri burada.",
+    sampleOfferMessage: "Bunlar önizleme amaçlı örnek tekliflerdir; nihai rezervasyon fiyatları değildir.",
     viewDeal: "Fırsatı gör",
+    detailsComingSoon: "Detaylar yakında",
+    bookingUnavailable: "Rezervasyon akışı henüz bağlı değil.",
+    previousOffers: "Önceki teklifler",
+    nextOffers: "Sonraki teklifler",
+    directFlight: "Direkt",
+    oneStop: "1 aktarma",
+    multipleStops: "{count} aktarma",
+    offerRecommendationFallback: "Fiyat ve gezi ayrıntıları açısından dengeli.",
     saveOffer: "Kaydet",
     savedOffer: "Kaydedildi",
     recommendedBecause: "Neden uygun",
@@ -534,11 +558,23 @@ const I18N = {
     offersFlightsTitle: "خيارات الرحلات",
     offersStaysTitle: "الإقامات والشقق",
     offerComparisonTitle: "مقارنة سريعة",
-    offerLoading: "جار البحث عن عروض تجريبية مناسبة...",
-    offerEmpty: "لا توجد عروض تجريبية مطابقة لهذا الطلب حاليا.",
+    offerLoading: "جار البحث عن عروض مناسبة...",
+    offerEmpty: "لا توجد عروض مطابقة متاحة حاليا.",
     offerError: "تعذر تحميل بطاقات العروض الآن.",
     mockOffersNote: "عروض تجريبية لمعاينة الواجهة",
+    liveDuffelOffers: "عروض Duffel مباشرة",
+    sampleOffers: "عروض تجريبية",
+    liveFlightOfferMessage: "هذه أفضل خيارات الطيران المتاحة حاليًا حسب السعر والمدة وعدد التوقفات.",
+    sampleOfferMessage: "هذه نتائج تجريبية للعرض، وليست أسعار حجز نهائية.",
     viewDeal: "عرض الصفقة",
+    detailsComingSoon: "التفاصيل قريبا",
+    bookingUnavailable: "نظام الحجز غير مرتبط بعد.",
+    previousOffers: "العروض السابقة",
+    nextOffers: "العروض التالية",
+    directFlight: "مباشرة",
+    oneStop: "توقف واحد",
+    multipleStops: "{count} توقفات",
+    offerRecommendationFallback: "خيار متوازن حسب السعر وتفاصيل الرحلة.",
     saveOffer: "حفظ",
     savedOffer: "تم الحفظ",
     recommendedBecause: "سبب الترشيح",
@@ -758,6 +794,10 @@ function normalizeMessages(items) {
 
       if (item.offers) {
         message.offers = normalizeOffers(item.offers);
+      }
+
+      if (item.offerMeta) {
+        message.offerMeta = normalizeOfferMeta(item.offerMeta);
       }
 
       return message;
@@ -2096,12 +2136,21 @@ function normalizeOffer(value) {
     pros: list(value.pros),
     cons: list(value.cons),
     score: Number.isFinite(Number(value.score)) ? Number(value.score) : 0,
+    isMock: typeof value.isMock === "boolean" ? value.isMock : null,
+    sourceProvider: safeText(value.sourceProvider),
   };
 }
 
 function normalizeOffers(items) {
   if (!Array.isArray(items)) return [];
   return items.map(normalizeOffer).filter(Boolean).slice(0, 24);
+}
+
+function normalizeOfferMeta(value = {}) {
+  return {
+    isMock: value.isMock !== false,
+    provider: safeText(value.provider, value.isMock === false ? "duffel" : "mock").toLowerCase(),
+  };
 }
 
 function offerIntentFor(message) {
@@ -2175,7 +2224,22 @@ async function fetchTravelOffers(intent, payload, message) {
     })
   );
 
-  return normalizeOffers(payloads.flatMap((item) => item.offers || []));
+  const offers = normalizeOffers(
+    payloads.flatMap((item) =>
+      (item.offers || []).map((offer) => ({
+        ...offer,
+        isMock: item.isMock !== false,
+        sourceProvider: safeText(item.provider),
+      }))
+    )
+  );
+  const livePayload = payloads.find((item) => item.isMock === false && Array.isArray(item.offers) && item.offers.length);
+
+  return {
+    offers,
+    isMock: !livePayload,
+    provider: safeText(livePayload?.provider || payloads[0]?.provider, livePayload ? "duffel" : "mock"),
+  };
 }
 
 function savedOfferIds() {
@@ -2209,10 +2273,24 @@ function offerGroupTitle(type) {
 function offerDetailItems(offer) {
   const details = [];
   if (offer.duration) details.push([t("durationLabel"), offer.duration]);
-  if (offer.stops !== null && offer.stops !== undefined) details.push([t("stopsLabel"), String(offer.stops)]);
-  if (offer.rating !== null && offer.rating !== undefined) details.push([t("ratingLabel"), `${offer.rating}/5`]);
-  if (offer.cancellationPolicy) details.push([t("cancellationLabel"), offer.cancellationPolicy]);
+  if (offer.stops !== null && offer.stops !== undefined) details.push([t("stopsLabel"), formatOfferStops(offer.stops)]);
+  if (offer.type !== "flight" && offer.rating !== null && offer.rating !== undefined) {
+    details.push([t("ratingLabel"), `${offer.rating}/5`]);
+  }
+  if (offer.cancellationPolicy) {
+    const policy = offer.cancellationPolicy.length > 58
+      ? `${offer.cancellationPolicy.slice(0, 55).trim()}...`
+      : offer.cancellationPolicy;
+    details.push([t("cancellationLabel"), policy]);
+  }
   return details.slice(0, 4);
+}
+
+function formatOfferStops(stops) {
+  const count = Math.max(0, Number(stops) || 0);
+  if (count === 0) return t("directFlight");
+  if (count === 1) return t("oneStop");
+  return t("multipleStops", { count });
 }
 
 function createOfferMiniTable(offers) {
@@ -2243,21 +2321,95 @@ function createOfferMiniTable(offers) {
   return table;
 }
 
+
+function routePartsForOffer(offer) {
+  const source = `${offer.location || ""} ${offer.title || ""}`;
+  const codeMatch = source.match(/\b([A-Z]{3})\b\s*(?:->|→|to|-|–)\s*\b([A-Z]{3})\b/i);
+  if (codeMatch) return [codeMatch[1].toUpperCase(), codeMatch[2].toUpperCase()];
+
+  const titleMatch = String(offer.title || "").match(/(.+?)\s+(?:to|→|->)\s+(.+)/i);
+  if (titleMatch) return [titleMatch[1].trim().slice(0, 3).toUpperCase(), titleMatch[2].trim().slice(0, 3).toUpperCase()];
+
+  return ["OUT", "ARR"];
+}
+
+function airlineLabelForOffer(offer) {
+  const subtitle = safeText(offer.subtitle);
+  if (subtitle.includes(" via ")) return subtitle.split(" via ")[0].trim();
+  if (subtitle.includes("·")) return subtitle.split("·")[0].trim();
+  return safeText(offer.provider, "Flight");
+}
+
+function createFlightVisual(offer) {
+  const visual = document.createElement("div");
+  visual.className = "offer-card-visual flight-visual";
+  const [origin, destination] = routePartsForOffer(offer);
+
+  const top = document.createElement("div");
+  top.className = "flight-visual-top";
+  const airline = document.createElement("span");
+  airline.className = "flight-airline-mark";
+  airline.textContent = airlineLabelForOffer(offer);
+  const provider = document.createElement("span");
+  provider.className = "flight-provider-chip";
+  provider.textContent = offer.provider;
+  top.append(airline, provider);
+
+  const route = document.createElement("div");
+  route.className = "flight-route-visual";
+  const originNode = document.createElement("strong");
+  originNode.textContent = origin;
+  const line = document.createElement("span");
+  line.className = "flight-route-line";
+  line.setAttribute("aria-hidden", "true");
+  const destinationNode = document.createElement("strong");
+  destinationNode.textContent = destination;
+  route.append(originNode, line, destinationNode);
+
+  const meta = document.createElement("div");
+  meta.className = "flight-visual-meta";
+  const stops = formatOfferStops(offer.stops);
+  [offer.departureTime && `${offer.departureTime} - ${offer.arrivalTime || ""}`, offer.duration, stops]
+    .filter(Boolean)
+    .forEach((item) => {
+      const chip = document.createElement("span");
+      chip.textContent = item;
+      meta.appendChild(chip);
+    });
+
+  visual.append(top, route, meta);
+  return visual;
+}
+
+function isExternalBookingUrl(value) {
+  const clean = safeText(value);
+  if (!clean || clean === "#") return false;
+  try {
+    const url = new URL(clean, window.location.href);
+    if (!["http:", "https:"].includes(url.protocol)) return false;
+    return url.origin !== window.location.origin;
+  } catch {
+    return false;
+  }
+}
+
 function createOfferCard(offer) {
   const card = document.createElement("article");
   card.className = `offer-card offer-card-${offer.type}`;
 
-  const visual = document.createElement("div");
-  visual.className = "offer-card-visual";
-  if (offer.imageUrl) {
-    const image = document.createElement("img");
-    image.src = offer.imageUrl;
-    image.alt = "";
-    image.loading = "lazy";
-    visual.appendChild(image);
-  } else {
-    visual.classList.add("placeholder");
-    visual.textContent = offer.type === "flight" ? "FLY" : "STAY";
+  const visual = offer.type === "flight" ? createFlightVisual(offer) : document.createElement("div");
+  if (offer.type !== "flight") {
+    visual.className = "offer-card-visual";
+    if (offer.imageUrl) {
+      const image = document.createElement("img");
+      image.src = offer.imageUrl;
+      image.alt = "";
+      image.loading = "lazy";
+      visual.appendChild(image);
+    } else {
+      visual.classList.add("placeholder", "stay-visual-placeholder");
+      visual.textContent = "STAY";
+    }
   }
   card.appendChild(visual);
 
@@ -2300,16 +2452,28 @@ function createOfferCard(offer) {
 
   const reason = document.createElement("p");
   reason.className = "offer-reason";
-  reason.textContent = offer.pros.length ? `${t("recommendedBecause")}: ${offer.pros.slice(0, 2).join("; ")}` : t("mockOffersNote");
+  reason.textContent = offer.pros.length
+    ? `${t("recommendedBecause")}: ${offer.pros.slice(0, 2).join("; ")}`
+    : t("offerRecommendationFallback");
 
   const actions = document.createElement("div");
   actions.className = "offer-actions";
-  const deal = document.createElement("a");
+  const hasBookingUrl = isExternalBookingUrl(offer.bookingUrl);
+  const deal = document.createElement(hasBookingUrl ? "a" : "button");
   deal.className = "offer-deal-button";
-  deal.href = offer.bookingUrl || "#";
-  deal.target = "_blank";
-  deal.rel = "noopener noreferrer";
-  deal.textContent = t("viewDeal");
+  if (hasBookingUrl) {
+    deal.href = offer.bookingUrl;
+    deal.target = "_blank";
+    deal.rel = "noopener noreferrer";
+    deal.textContent = t("viewDeal");
+  } else {
+    deal.type = "button";
+    deal.disabled = true;
+    deal.classList.add("disabled");
+    deal.textContent = t("detailsComingSoon");
+    deal.title = t("bookingUnavailable");
+    deal.setAttribute("aria-label", t("bookingUnavailable"));
+  }
   const save = document.createElement("button");
   save.className = "offer-save-button";
   save.type = "button";
@@ -2327,6 +2491,83 @@ function createOfferCard(offer) {
   body.append(top, title, subtitle, badges, details, reason, actions);
   card.appendChild(body);
   return card;
+}
+
+function createOfferCarousel(offers) {
+  const shell = document.createElement("div");
+  shell.className = "offer-carousel-shell";
+
+  const carousel = document.createElement("div");
+  carousel.className = "offer-carousel";
+  carousel.setAttribute("tabindex", "0");
+  offers.forEach((offer) => carousel.appendChild(createOfferCard(offer)));
+
+  const isRtl = document.documentElement.dir === "rtl";
+  const previous = document.createElement("button");
+  previous.className = "offer-carousel-arrow offer-carousel-arrow-previous";
+  previous.type = "button";
+  previous.textContent = isRtl ? "→" : "←";
+  previous.title = t("previousOffers");
+  previous.setAttribute("aria-label", t("previousOffers"));
+
+  const next = document.createElement("button");
+  next.className = "offer-carousel-arrow offer-carousel-arrow-next";
+  next.type = "button";
+  next.textContent = isRtl ? "←" : "→";
+  next.title = t("nextOffers");
+  next.setAttribute("aria-label", t("nextOffers"));
+
+  const updateArrowState = () => {
+    const cards = [...carousel.querySelectorAll(".offer-card")];
+    if (!cards.length) {
+      previous.disabled = true;
+      next.disabled = true;
+      return;
+    }
+
+    const viewport = carousel.getBoundingClientRect();
+    const first = cards[0].getBoundingClientRect();
+    const last = cards[cards.length - 1].getBoundingClientRect();
+    const tolerance = 3;
+    previous.disabled = isRtl
+      ? first.right <= viewport.right + tolerance
+      : first.left >= viewport.left - tolerance;
+    next.disabled = isRtl
+      ? last.left >= viewport.left - tolerance
+      : last.right <= viewport.right + tolerance;
+  };
+
+  const scrollByCard = (direction) => {
+    const card = carousel.querySelector(".offer-card");
+    if (!card) return;
+    const styles = window.getComputedStyle(carousel);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap) || 0;
+    const distance = card.getBoundingClientRect().width + gap;
+    carousel.scrollBy({
+      left: distance * direction * (isRtl ? -1 : 1),
+      behavior: "smooth",
+    });
+  };
+
+  previous.addEventListener("click", () => scrollByCard(-1));
+  next.addEventListener("click", () => scrollByCard(1));
+
+  let frame = 0;
+  carousel.addEventListener("scroll", () => {
+    if (frame) return;
+    frame = window.requestAnimationFrame(() => {
+      frame = 0;
+      updateArrowState();
+    });
+  }, { passive: true });
+  if (window.ResizeObserver) {
+    const observer = new ResizeObserver(updateArrowState);
+    observer.observe(carousel);
+  }
+  window.requestAnimationFrame(updateArrowState);
+
+  shell.append(previous, carousel, next);
+  return shell;
 }
 
 function createOfferPanel(payload = {}) {
@@ -2380,15 +2621,14 @@ function createOfferPanel(payload = {}) {
     const title = document.createElement("h2");
     title.textContent = offerGroupTitle(type === "flight" ? "flight" : "stay");
     const note = document.createElement("span");
-    note.textContent = t("mockOffersNote");
+    const itemMockStates = items.map((offer) => offer.isMock).filter((value) => typeof value === "boolean");
+    const groupIsMock = itemMockStates.length
+      ? itemMockStates.every(Boolean)
+      : normalizeOfferMeta(payload.offerMeta || payload).isMock;
+    note.textContent = t(groupIsMock ? "sampleOffers" : "liveDuffelOffers");
     header.append(title, note);
 
-    const carousel = document.createElement("div");
-    carousel.className = "offer-carousel";
-    carousel.setAttribute("tabindex", "0");
-    items.forEach((offer) => carousel.appendChild(createOfferCard(offer)));
-
-    group.append(header, createOfferMiniTable(items), carousel);
+    group.append(header, createOfferMiniTable(items), createOfferCarousel(items));
     panel.appendChild(group);
   });
 
@@ -2398,6 +2638,7 @@ function createOfferPanel(payload = {}) {
 function updateOfferPanel(row, payload = {}) {
   const stack = row?.querySelector(".message-stack");
   if (!stack) return;
+  row.classList.add("has-offers");
   const next = createOfferPanel(payload);
   const current = stack.querySelector('[data-offer-panel="true"]');
   if (current) {
@@ -2406,6 +2647,19 @@ function updateOfferPanel(row, payload = {}) {
   }
   const actions = stack.querySelector(".message-actions, .trip-plan-actions");
   stack.insertBefore(next, actions || null);
+}
+
+function updateAssistantMessage(row, content) {
+  const stack = row?.querySelector(".message-stack");
+  const bubble = stack?.querySelector(".message-bubble");
+  if (!stack || !bubble) return;
+
+  const meta = bubble.querySelector(".message-meta")?.cloneNode(true);
+  bubble.innerHTML = renderAssistantContent(content).html;
+  if (meta) bubble.appendChild(meta);
+
+  const actions = stack.querySelector(".message-actions");
+  if (actions) actions.replaceWith(createMessageActions(row, bubble, content, null));
 }
 
 function appendMessage(role, content, meta = "", attachments = [], historyIndex = null, options = {}) {
@@ -2423,6 +2677,14 @@ function appendMessage(role, content, meta = "", attachments = [], historyIndex 
   }
   if (Number.isInteger(historyIndex)) {
     row.dataset.historyIndex = String(historyIndex);
+  }
+  const hasOfferPanel = Boolean(
+    options.offerStatus ||
+    (Array.isArray(options.offers) && options.offers.length) ||
+    options.offerMeta
+  );
+  if (role === "assistant" && hasOfferPanel) {
+    row.classList.add("has-offers");
   }
 
   const stack = document.createElement("div");
@@ -2477,8 +2739,12 @@ function appendMessage(role, content, meta = "", attachments = [], historyIndex 
   }
 
   stack.appendChild(bubble);
-  if (role === "assistant" && (options.offerStatus || options.offers)) {
-    stack.appendChild(createOfferPanel({ status: options.offerStatus || "ready", offers: options.offers || [] }));
+  if (role === "assistant" && hasOfferPanel) {
+    stack.appendChild(createOfferPanel({
+      status: options.offerStatus || "ready",
+      offers: options.offers || [],
+      offerMeta: options.offerMeta,
+    }));
   }
   if (options.actions !== false) {
     stack.appendChild(
@@ -2550,6 +2816,7 @@ function renderHistory() {
       createdAt: item.createdAt,
       settings: item.settings,
       offers: item.offers,
+      offerMeta: item.offerMeta,
     })
   );
 }
@@ -2797,8 +3064,8 @@ async function submitPlan(event) {
       throw Object.assign(new Error(classified.message), classified);
     }
 
-    const assistantContent = offerIntent
-      ? String(data.answer || "").trim() || t("fallbackPlanMessage")
+    let assistantContent = offerIntent
+      ? t("offerLoading")
       : buildAssistantMessageContent(data);
     const assistantSettings = planSettingsFromPayload(payload);
     const assistantCreatedAt = new Date().toISOString();
@@ -2823,24 +3090,37 @@ async function submitPlan(event) {
         content: assistantContent,
         createdAt: assistantCreatedAt,
         settings: assistantSettings,
-        offers: [],
+        ...(offerIntent ? { offers: [], offerMeta: { isMock: true, provider: "mock" } } : {}),
       },
     ].slice(-MAX_HISTORY_MESSAGES);
     saveHistory();
 
     if (offerIntent) {
       fetchTravelOffers(offerIntent, payload, message)
-        .then((offers) => {
-          updateOfferPanel(assistantRow, { status: "ready", offers });
+        .then((result) => {
+          const finalContent = result.offers.length
+            ? t(result.isMock ? "sampleOfferMessage" : "liveFlightOfferMessage")
+            : t("offerEmpty");
+          const offerMeta = normalizeOfferMeta(result);
+          updateAssistantMessage(assistantRow, finalContent);
+          updateOfferPanel(assistantRow, { status: "ready", offers: result.offers, offerMeta });
           const last = history[history.length - 1];
           if (last?.role === "assistant" && last.createdAt === assistantCreatedAt) {
-            last.offers = offers;
+            last.content = finalContent;
+            last.offers = result.offers;
+            last.offerMeta = offerMeta;
             saveHistory();
           }
         })
         .catch((error) => {
           console.warn("Could not load travel offers.", error);
+          updateAssistantMessage(assistantRow, t("offerError"));
           updateOfferPanel(assistantRow, { status: "error", message: t("offerError") });
+          const last = history[history.length - 1];
+          if (last?.role === "assistant" && last.createdAt === assistantCreatedAt) {
+            last.content = t("offerError");
+            saveHistory();
+          }
         });
     }
   } catch (error) {

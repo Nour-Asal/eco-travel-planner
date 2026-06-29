@@ -34,6 +34,8 @@ class TravelOffer(BaseModel):
     pros: list[str] = Field(default_factory=list, max_length=6)
     cons: list[str] = Field(default_factory=list, max_length=6)
     score: float = Field(default=0, ge=0, le=100)
+    isMock: bool | None = None
+    sourceProvider: str = Field(default="", max_length=80)
 
 
 class OfferSearchResponse(BaseModel):
@@ -43,10 +45,16 @@ class OfferSearchResponse(BaseModel):
     query: dict[str, str | int | None] = Field(default_factory=dict)
 
 
+class OfferDisplayMeta(BaseModel):
+    provider: str = Field(default="mock", max_length=80)
+    isMock: bool = True
+
+
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
     content: str = Field(min_length=1, max_length=6000)
     offers: list[TravelOffer] = Field(default_factory=list, max_length=24)
+    offerMeta: OfferDisplayMeta | None = None
 
 
 class AttachmentInput(BaseModel):
@@ -110,7 +118,7 @@ class ShareTripSettings(BaseModel):
 
 
 class ShareSnapshot(BaseModel):
-    version: str = Field(default="1.2.0", min_length=1, max_length=30)
+    version: str = Field(default="1.2.1", min_length=1, max_length=30)
     title: str = Field(default="Eco Travel Planner chat", min_length=1, max_length=120)
     createdAt: str = Field(min_length=1, max_length=80)
     history: list[ChatMessage] = Field(default_factory=list, min_length=1, max_length=80)
